@@ -21,7 +21,7 @@ def progress_bar(current, total, bar_length=50, prefix="Progress", start_time=No
     
     percent = float(current) * 100 / total
     filled_length = int(bar_length * current // total)
-    bar = '█' * filled_length + '░' * (bar_length - filled_length)
+    bar = '#' * filled_length + '-' * (bar_length - filled_length)
     
     # Calculate ETA
     eta_str = ""
@@ -70,7 +70,7 @@ def extract_text_from_json(json_file):
         # Join with newlines to preserve line structure
         return '\n'.join(texts) if texts else ""
     except Exception as e:
-        print(f"\n⚠️  Warning: Could not parse JSON from {json_file.name}: {e}")
+        print(f"\nWarning: Could not parse JSON from {json_file.name}: {e}")
         return ""
 
 def combine_files_streaming(files, output_file, show_progress=True):
@@ -79,7 +79,7 @@ def combine_files_streaming(files, output_file, show_progress=True):
     Returns: (deleted_count, total_bytes)
     """
     if show_progress:
-        print("📚 Combining & deleting files (streaming)...")
+        print("Combining & deleting files (streaming)...")
     
     deleted_count = 0
     total_bytes = 0
@@ -124,7 +124,7 @@ def combine_files_streaming(files, output_file, show_progress=True):
                 sys.stdout.write('\r')
                 sys.stdout.write('\033[K')
                 sys.stdout.flush()
-                print(f"⚠️  Warning: Could not process {file_path.name}: {e}")
+                print(f"Warning: Could not process {file_path.name}: {e}")
                 continue
     
     return deleted_count, total_bytes
@@ -137,7 +137,7 @@ def clean_text_streaming(input_file, output_file, show_progress=True):
     Returns: (original_chars, cleaned_chars)
     """
     if show_progress:
-        print("🧹 Cleaning text (streaming)...")
+        print("Cleaning text (streaming)...")
     
     file_size = input_file.stat().st_size
     bytes_processed = 0
@@ -219,7 +219,7 @@ def process_lines_streaming(input_file, output_file, show_progress=True, max_wor
     Returns: (removed_single_word, duplicate_count, removed_repeats, total_lines)
     """
     if show_progress:
-        print("🔍 Filtering & deduplicating (streaming)...")
+        print("Filtering & deduplicating (streaming)...")
     
     file_size = input_file.stat().st_size
     seen_lines = set()
@@ -315,45 +315,45 @@ def combine_and_clean_files(folder_path=".", output_file="combined_cleaned.txt")
     folder = Path(folder_path)
     
     if not folder.exists():
-        print(f"❌ Error: Folder '{folder_path}' does not exist.")
+        print(f"Error: Folder '{folder_path}' does not exist.")
         return False
     
     if not folder.is_dir():
-        print(f"❌ Error: '{folder_path}' is not a directory.")
+        print(f"Error: '{folder_path}' is not a directory.")
         return False
     
     # Find all .txt and .json files recursively
-    print("🔍 Scanning for files recursively...")
+    print("Scanning for files recursively...")
     all_files = find_files_recursive(folder_path)
     
     if not all_files:
-        print(f"❌ No .txt or .json files found in '{folder_path}' or its subdirectories")
+        print(f"No .txt or .json files found in '{folder_path}' or its subdirectories")
         return False
     
     # Group by file type for display
     txt_files = [f for f in all_files if f.suffix.lower() == '.txt']
     json_files = [f for f in all_files if f.suffix.lower() == '.json']
     
-    print(f"\n📁 Found {len(all_files)} files total:")
-    print(f"  📄 {len(txt_files)} text files")
-    print(f"  📋 {len(json_files)} JSON files")
+    print(f"\nFound {len(all_files)} files total:")
+    print(f"  {len(txt_files)} text files")
+    print(f"  {len(json_files)} JSON files")
     print(f"\nFiles from folders:")
     
     # Show folder structure
     folders = set(f.parent for f in all_files)
     for folder_item in sorted(folders):
         folder_files = [f for f in all_files if f.parent == folder_item]
-        print(f"  📂 {folder_item.relative_to(folder)}/  ({len(folder_files)} files)")
+        print(f"  {folder_item.relative_to(folder)}/  ({len(folder_files)} files)")
     
     # Confirm with user
-    print(f"\n🎯 Will combine into '{output_file}', clean, and DELETE originals as processed.")
-    print("⚠️  WARNING: Original files will be DELETED as they are read!")
-    print("💾 Using streaming mode - can handle multi-GB files!")
-    print("🔄 Processing recursively through all subdirectories!")
+    print(f"\nWill combine into '{output_file}', clean, and DELETE originals as processed.")
+    print("WARNING: Original files will be DELETED as they are read!")
+    print("Using streaming mode - can handle multi-GB files!")
+    print("Processing recursively through all subdirectories!")
     
     response = input("\nProceed? (y/N): ")
     if response.lower() != 'y':
-        print("❌ Operation cancelled.")
+        print("Operation cancelled.")
         return False
     
     output_path = folder / output_file
@@ -366,42 +366,42 @@ def combine_and_clean_files(folder_path=".", output_file="combined_cleaned.txt")
         
         # STEP 1: Combine files
         print("\n" + "=" * 60)
-        print("📚 STEP 1: Combining & deleting files...")
+        print("STEP 1: Combining & deleting files...")
         print("=" * 60)
         
         deleted_count, total_bytes = combine_files_streaming(all_files, temp_combined, show_progress=True)
         
-        print(f"✅ Combined {len(txt_files)} files")
-        print(f"📏 Total size: ~{total_bytes:,} bytes")
+        print(f"Combined {len(txt_files)} files")
+        print(f"Total size: ~{total_bytes:,} bytes")
         
         # STEP 2: Clean text
         print("\n" + "=" * 60)
-        print("🧼 STEP 2: Cleaning text...")
+        print("STEP 2: Cleaning text...")
         print("=" * 60)
         
         original_chars, cleaned_chars = clean_text_streaming(temp_combined, temp_cleaned, show_progress=True)
         removed_chars = original_chars - cleaned_chars
         
-        print(f"\n📊 Cleaning Statistics:")
-        print(f"  📏 Original: {original_chars:,} characters")
-        print(f"  🧹 Cleaned:  {cleaned_chars:,} characters")
-        print(f"  🗑️  Removed:  {removed_chars:,} characters ({removed_chars/original_chars*100:.1f}%)")
+        print(f"\nCleaning Statistics:")
+        print(f"  Original: {original_chars:,} characters")
+        print(f"  Cleaned:  {cleaned_chars:,} characters")
+        print(f"  Removed:  {removed_chars:,} characters ({removed_chars/original_chars*100:.1f}%)")
         
         # Free up space
         temp_combined.unlink()
         
         # STEP 3: Process lines (filter & deduplicate)
         print("\n" + "=" * 60)
-        print("🔍 STEP 3: Filtering & deduplicating...")
+        print("STEP 3: Filtering & deduplicating...")
         print("=" * 60)
         
         removed_lines, duplicate_count, removed_repeats, total_lines = process_lines_streaming(temp_cleaned, output_path, show_progress=True)
         
-        print(f"\n📊 Line Processing Statistics:")
-        print(f"  📝 Total lines: {total_lines:,}")
-        print(f"  🗑️  Removed single-word lines: {removed_lines:,}")
-        print(f"  🔄 Removed duplicates: {duplicate_count:,}")
-        print(f"  🔁 Removed lines with excessive repetition: {removed_repeats:,}")
+        print(f"\nLine Processing Statistics:")
+        print(f"  Total lines: {total_lines:,}")
+        print(f"  Removed single-word lines: {removed_lines:,}")
+        print(f"  Removed duplicates: {duplicate_count:,}")
+        print(f"  Removed lines with excessive repetition: {removed_repeats:,}")
         
         # Clean up
         temp_cleaned.unlink()
@@ -414,22 +414,22 @@ def combine_and_clean_files(folder_path=".", output_file="combined_cleaned.txt")
         final_size = output_path.stat().st_size
         
         print("\n" + "=" * 60)
-        print("🎉 ALL DONE!")
+        print("ALL DONE!")
         print("=" * 60)
-        print(f"✅ Combined {len(all_files)} files ({len(txt_files)} txt, {len(json_files)} json)")
-        print(f"✅ Deleted {deleted_count}/{len(all_files)} original files")
-        print(f"✅ Removed {removed_chars:,} unwanted characters")
-        print(f"✅ Removed {removed_lines:,} single-word lines")
-        print(f"✅ Removed {duplicate_count:,} duplicate lines")
-        print(f"✅ Removed {removed_repeats:,} lines with excessive word repetition")
-        print(f"✅ Final file size: {final_size:,} bytes")
-        print(f"✅ Saved to: {output_path.name}")
+        print(f"Combined {len(all_files)} files ({len(txt_files)} txt, {len(json_files)} json)")
+        print(f"Deleted {deleted_count}/{len(all_files)} original files")
+        print(f"Removed {removed_chars:,} unwanted characters")
+        print(f"Removed {removed_lines:,} single-word lines")
+        print(f"Removed {duplicate_count:,} duplicate lines")
+        print(f"Removed {removed_repeats:,} lines with excessive word repetition")
+        print(f"Final file size: {final_size:,} bytes")
+        print(f"Saved to: {output_path.name}")
         print("=" * 60)
         
         return True
         
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\nError: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -448,21 +448,21 @@ def main():
         output_file = sys.argv[2]
     else:
         print("Usage: python combine_and_clean_v2.py [folder_path] [output_file]")
-        print("\n💾 Memory-efficient streaming mode - handles multi-GB files!")
-        print("🔄 Recursively processes all subdirectories!")
-        print("📋 Supports both .txt and .json files!")
+        print("\nMemory-efficient streaming mode - handles multi-GB files!")
+        print("Recursively processes all subdirectories!")
+        print("Supports both .txt and .json files!")
         print("\nArguments:")
         print("  folder_path    Folder with .txt/.json files (default: current directory)")
         print("  output_file    Output filename (default: combined_cleaned.txt)")
-        print("\n⚠️  Original files are DELETED as they're processed!")
+        print("\nWARNING: Original files are DELETED as they're processed!")
         print("\nFeatures:")
-        print("  • Recursively scans all subdirectories")
-        print("  • Handles .txt and .json files")
-        print("  • Extracts text from JSON automatically")
-        print("  • Removes numbers and special characters")
-        print("  • Keeps only letters and .,!? punctuation")
-        print("  • Filters single-word lines")
-        print("  • Removes duplicate lines")
+        print("  - Recursively scans all subdirectories")
+        print("  - Handles .txt and .json files")
+        print("  - Extracts text from JSON automatically")
+        print("  - Removes numbers and special characters")
+        print("  - Keeps only letters and .,!? punctuation")
+        print("  - Filters single-word lines")
+        print("  - Removes duplicate lines")
         sys.exit(1)
     
     success = combine_and_clean_files(folder_path, output_file)
