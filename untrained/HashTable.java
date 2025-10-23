@@ -235,8 +235,9 @@ public class HashTable<K, V> implements Serializable {
      *
      * @param arraySize the size of the array.
      */
+    @SuppressWarnings("unchecked")
     private void allocateArray(int arraySize) {
-        storage = new HashEntry[nextPrime(arraySize)];
+        storage = (HashEntry<K, V>[]) new HashEntry[nextPrime(arraySize)];
     }
 
     /**

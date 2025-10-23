@@ -1,15 +1,11 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.Scanner;
-import java.util.concurrent.*;
-import java.util.List;
 import java.util.HashSet;
 
 public class WritePoetry {
     private static final String CACHE_FILE = "hashtable_cache.ser";
-    private static final int NUM_THREADS = Runtime.getRuntime().availableProcessors();
-    private static final int MAX_ATTEMPTS = 50; // Max attempts to find a non-repeating word
+    private static final int MAX_ATTEMPTS = 50;
     
     public String writePoem(String file, String startWord, int length, boolean printHashtable) {
         String currentWord = startWord;
@@ -32,12 +28,10 @@ public class WritePoetry {
             String nextWord = null;
             int attempts = 0;
             
-            // Try to find a word that hasn't been used yet
             while (attempts < MAX_ATTEMPTS) {
                 int count = rnd.nextInt(wordInfo.getOccurCount());
                 String candidate = wordInfo.getFollowWord(count);
                 
-                // Check if it's not a repeat (or if it's punctuation, allow it)
                 if (!usedWords.contains(candidate) || 
                     candidate.equals(".") || candidate.equals(",") || 
                     candidate.equals("!") || candidate.equals("?") ||
@@ -48,36 +42,29 @@ public class WritePoetry {
                 attempts++;
             }
             
-            // If we couldn't find a non-repeating word after MAX_ATTEMPTS, use any word
             if (nextWord == null) {
                 int count = rnd.nextInt(wordInfo.getOccurCount());
                 nextWord = wordInfo.getFollowWord(count);
             }
             
-            // Check if current word is punctuation
             boolean isPunctuation = currentWord.equals(".") || currentWord.equals(",") || 
                                    currentWord.equals("!") || currentWord.equals("?");
             
-            // Check if next word is punctuation
             boolean nextIsPunctuation = nextWord.equals(".") || nextWord.equals(",") || 
                                        nextWord.equals("!") || nextWord.equals("?");
             
-            // Add current word to output
             if (isPunctuation) {
-                // Punctuation: no space before, add space after (unless it's the last word)
                 returnString.append(currentWord);
                 if (i < length - 1 && !nextIsPunctuation) {
                     returnString.append(" ");
                 }
             } else {
-                // Regular word: add space after only if next word is not punctuation
                 returnString.append(currentWord);
                 if (!nextIsPunctuation && i < length - 1) {
                     returnString.append(" ");
                 }
             }
             
-            // Track used words (but not punctuation)
             if (!isPunctuation && !currentWord.equals("\n")) {
                 usedWords.add(currentWord);
             }
@@ -90,7 +77,6 @@ public class WritePoetry {
     }
 
     public HashTable<String, WordFreqInfo> table(String file){
-        // Try to load cached hash table
         File cacheFile = new File(CACHE_FILE);
         if (cacheFile.exists()) {
             System.out.println("Found cached hash table (" + (cacheFile.length() / 1024 / 1024) + " MB). Loading...");
@@ -115,7 +101,6 @@ public class WritePoetry {
         long elapsed = System.currentTimeMillis() - startTime;
         System.out.println("Hash table built with " + table.size() + " unique words in " + (elapsed/1000) + "s");
         
-        // Save the hash table for next time
         System.out.println("Saving hash table to cache...");
         if (saveHashTable(table)) {
             System.out.println("Hash table saved successfully!\n");
@@ -136,7 +121,6 @@ public class WritePoetry {
         }
     }
     
-    @SuppressWarnings("unchecked")
     private HashTable<String, WordFreqInfo> loadHashTable() {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(CACHE_FILE))) {
             return (HashTable<String, WordFreqInfo>) ois.readObject();
@@ -147,7 +131,7 @@ public class WritePoetry {
     }
     
     private HashTable<String, WordFreqInfo> buildHashTableOptimized(ArrayList<String> wordList) {
-        HashTable<String, WordFreqInfo> table = new HashTable<>(wordList.size() / 10); // Pre-size to reduce rehashing
+        HashTable<String, WordFreqInfo> table = new HashTable<>(wordList.size() / 10);
         
         ProgressBar hashProgress = new ProgressBar("Hashing", wordList.size() - 1);
         
@@ -174,7 +158,6 @@ public class WritePoetry {
         File poem = new File(file);
         ArrayList<String> wordList= new ArrayList<>();
         
-        // First pass: count lines for progress bar
         int totalLines = 0;
         try (BufferedReader counter = new BufferedReader(new FileReader(poem), 8192 * 4)) {
             while (counter.readLine() != null) {
@@ -198,13 +181,11 @@ public class WritePoetry {
                     
                     String word = token.toLowerCase();
                     
-                    // Handle punctuation - extract word and punctuation separately
                     if (word.matches(".*[.,!?].*")) {
                         String cleanWord = word.replaceAll("[.,!?]", "");
                         if (cleanWord.length() > 0) {
                             wordList.add(cleanWord);
                         }
-                        // Extract punctuation marks
                         for (char c : word.toCharArray()) {
                             if (c == '.' || c == ',' || c == '!' || c == '?') {
                                 wordList.add(String.valueOf(c));
